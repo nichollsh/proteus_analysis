@@ -2,6 +2,7 @@ import numpy as np
 import glob, os, re
 import netCDF4 as nc 
 import pandas as pd
+from tqdm import tqdm
 
 # List of volatiles
 volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2", "O2", "S", "He"]
@@ -140,4 +141,61 @@ def get_dict_values( self, keys, fmt_o='' ):
     if fmt_o:
         scaled_values_a = fmt_o.ascale( scaled_values_a )
     return scaled_values_a
+
+def load_cvars(cases):
+    ncases = len(cases)
+    pbar = tqdm(desc="Configs", total=ncases)
+    cfgs = []
+    for i in range(ncases):
+        cfgs.append(read_config(cases[i]))
+        pbar.update(1)
+    pbar.close()
+    keys = cfgs[0].keys()
+    cvars = {}
+    for k in keys:
+        values = []
+        for i in range(ncases):
+            v = cfgs[i][k]
+            if is_float(v):
+                values.append(v)
+        if len(values) > 0:
+            cvars[k] = np.array(values)
+    return cvars 
+    
+def load_helpfiles(cases):
+    helps = []
+    cvars = {}
+    ncases = len(cases)
+    pbar = tqdm(desc="Helpfiles", total=ncases)
+    for i in range(ncases):
+        helps.append(read_helpfile(cases[i]))
+        pbar.update(1)
+    pbar.close()
+    for v in volatile_species:
+        v_arr = []
+        for h in helps:
+            v_arr.append(h.iloc[-1][v+"_mr"])
+        cvars[v+"_surf"] = np.array(v_arr)
+
+    return helps, cvars
+
+def load_netcdfs(cases):
+    ncases = len(cases)
+    endt = []
+    endn = []
+    endp = []
+    pbar = tqdm(desc="NetCDFs", total=ncases)
+    for i in range(ncases):
+        t = get_nc_years(cases[i])[-1]
+        n = read_nc(cases[i]+"/data/%d_atm.nc" % t)
+        endt.append(t)
+        endn.append(n)
+        endp.append(n["psurf"])
+        pbar.update(1)
+    pbar.close()
+    endt = np.array(endt)
+    endp = np.array(endp)
+    endn = np.array(endn)
+
+    return endt, endp, endn
 
