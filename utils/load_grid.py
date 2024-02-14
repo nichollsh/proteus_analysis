@@ -18,9 +18,18 @@ volatile_colors  = {"H2O": "#8db4cb",
 
 # Get paths to case outputs for a given grid parent folder
 def get_cases(pgrid_dir:str):
+    # Case folders
     p = os.path.abspath(pgrid_dir)
     case_dirs = glob.glob(p + "/case_*")
-    return [os.path.abspath(c) for c in case_dirs]
+    if len(case_dirs) == 0:
+        print("WARNING: Case folders not found - check your pgrid path!")
+    
+    # Sort by case index
+    idxs = []
+    for c in case_dirs:
+        idxs.append(int(c.split("/")[-1].split("_")[-1]))
+    mask = np.argsort(idxs)
+    return [os.path.abspath(case_dirs[i]) for i in mask]
 
 # Get simulation output years for which we have json data
 def get_json_years(case_dir:str):
@@ -155,31 +164,42 @@ def load_cvars(cases):
     for k in keys:
         values = []
         for i in range(ncases):
-            v = cfgs[i][k]
-            if is_float(v):
-                values.append(v)
+            values.append(cfgs[i][k])
         if len(values) > 0:
-            cvars[k] = np.array(values)
+            cvars[k] = np.array(values,dtype=type(values[0]))
     return cvars 
     
 def load_helpfiles(cases):
     helps = []
-    cvars = {}
+    hvars = {}
     ncases = len(cases)
     pbar = tqdm(desc="Helpfiles", total=ncases)
     for i in range(ncases):
         helps.append(read_helpfile(cases[i]))
         pbar.update(1)
     pbar.close()
-    for v in volatile_species:
-        v_arr = []
+
+    for k in helps[0].keys():
+        tmp_arr = []
         for h in helps:
-            v_arr.append(h.iloc[-1][v+"_mr"])
-        cvars[v+"_surf"] = np.array(v_arr)
+            tmp_arr.append(np.array(h.loc[:,k]))
+        hvars[k] = np.array(tmp_arr,dtype=object)
+    return helps, hvars
 
-    return helps, cvars
+# Get value of 'key' at 'idx' for each case in 'hvars', which is a ragged array
+def access_hvars(hvars,key,idx):
+    rag = hvars[key]
 
-def load_netcdfs(cases):
+    # for each case...
+    vals = []
+    for i in range(np.shape(rag)[0]):
+        vals.append(rag[i][idx])
+
+    # return array value of 'key' for each case, at 'idx'
+    return np.array(vals,dtype=type(rag[0][0]))
+
+
+def load_netcdfs_end(cases):
     ncases = len(cases)
     endt = []
     endn = []
