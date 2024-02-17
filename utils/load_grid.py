@@ -6,15 +6,16 @@ from tqdm import tqdm
 
 # List of volatiles
 volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2", "O2", "S", "He"]
-volatile_colors  = {"H2O": "#8db4cb",
-                    "CO2": "#ce5e5e",
-                    "H2" : "#a0d2cb",
-                    "CH4": "#eb9194",
-                    "CO" : "#ff11ff",
-                    "N2" : "#c29fb2",
-                    "S"  : "#f1ca70",
-                    "O2" : "#57ccda",
-                    "He" : "#acbbbf"}
+volatile_colors  = {"H2O": "#C720DD",
+                    "CO2": "#D24901",
+                    "H2" : "#008C01",
+                    "CH4": "#027FB1",
+                    "CO" : "#D1AC02",
+                    "N2" : "#870036",
+                    "S"  : "#FF8FA1",
+                    "O2" : "#00008B",
+                    "He" : "#30FF71"
+                    }
 
 # Get paths to case outputs for a given grid parent folder
 def get_cases(pgrid_dir:str):
@@ -201,21 +202,15 @@ def access_hvars(hvars,key,idx):
 
 def load_netcdfs_end(cases):
     ncases = len(cases)
-    endt = []
     endn = []
-    endp = []
     pbar = tqdm(desc="NetCDFs", total=ncases)
     for i in range(ncases):
         t = get_nc_years(cases[i])[-1]
         n = read_nc(cases[i]+"/data/%d_atm.nc" % t)
-        endt.append(t)
         endn.append(n)
-        endp.append(n["psurf"])
         pbar.update(1)
     pbar.close()
-    endt = np.array(endt)
-    endp = np.array(endp)
     endn = np.array(endn)
 
-    return endt, endp, endn
+    return endn
 

@@ -1,1 +1,2 @@
-# PROTEUS_grid_analysis
+# Tools for analysing PROTEUS grid output
+
