@@ -227,14 +227,14 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
         y_locs  : Location of points on y-axis (1D)
         z_vals  : Values of points (2D)
         method  : Interpolation method
-        scaling : Use log-scaling if axes cover >2 OOM
+        scaling : Use log-scaling if variable range is >2 OOM
 
     Outputs
         xxo     : Original x-locations (2D grid)
         yyo     : Original y-locations (2D grid)
         xxi     : Interpolated x-locations (2D grid)
         yyi     : Interpolated y-locations (2D grid)
-        ddi     : Interpolated z_vals (2D grid)
+        zzi     : Interpolated z_vals (2D grid)
     '''
 
     # check dimensions
@@ -262,12 +262,15 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     ymin = np.amin(y_locs)
     ymax = np.amax(y_locs)
 
+    zlog = _is_log(z_vals)
+    if zlog:
+        z_vals = np.log10(z_vals)
+
     # input samples
     xxo, yyo = np.meshgrid(x_locs, y_locs, indexing='ij')
-    data = np.reshape(z_vals, (len(x_locs), len(y_locs)))
 
     # generate interpolator
-    interp = RegularGridInterpolator((x_locs, y_locs), data, bounds_error=False, fill_value=None, method=method)
+    interp = RegularGridInterpolator((x_locs, y_locs), z_vals, bounds_error=False, fill_value=None, method=method)
 
     # grid to interpolate at
     xi = np.linspace(xmin, xmax, npoints)
@@ -275,7 +278,7 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
 
     # do interpolation
     xxi, yyi = np.meshgrid(xi,yi,indexing='ij')
-    ddi = interp((xxi,yyi))
+    zzi = interp((xxi,yyi))
 
     if xlog:
         xxi = 10.0 ** xxi
@@ -283,5 +286,7 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     if ylog:
         yyi = 10.0 ** yyi
         yyo = 10.0 ** yyo
-    return xxo,yyo,xxi,yyi,ddi
+    if zlog:
+        zzi = 10.0 ** zzi
+    return xxo,yyo,xxi,yyi,zzi
 
