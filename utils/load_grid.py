@@ -225,7 +225,7 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     Inputs
         x_locs  : Location of points on x-axis (1D)
         y_locs  : Location of points on y-axis (1D)
-        z_vals  : Values of points (2D)
+        z_vals  : Values of points (1D, flattened)
         method  : Interpolation method
         scaling : Use log-scaling if variable range is >2 OOM
 
@@ -240,6 +240,9 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     # check dimensions
     if (len(x_locs) < 3) or (len(y_locs) < 3):
         raise Exception("Cannot interolate grid with a resolution less than 3")
+    
+    # reshape into 2d
+    z_2d = np.reshape(z_vals, (len(x_locs),len(y_locs))).T
     
     # check scaling
     def _is_log(_arr):
@@ -262,15 +265,15 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     ymin = np.amin(y_locs)
     ymax = np.amax(y_locs)
 
-    zlog = _is_log(z_vals)
+    zlog = _is_log(z_2d)
     if zlog:
-        z_vals = np.log10(z_vals)
+        z_2d = np.log10(z_2d)
 
     # input samples
     xxo, yyo = np.meshgrid(x_locs, y_locs, indexing='ij')
 
     # generate interpolator
-    interp = RegularGridInterpolator((x_locs, y_locs), z_vals, bounds_error=False, fill_value=None, method=method)
+    interp = RegularGridInterpolator((x_locs, y_locs), z_2d, bounds_error=False, fill_value=None, method=method)
 
     # grid to interpolate at
     xi = np.linspace(xmin, xmax, npoints)
