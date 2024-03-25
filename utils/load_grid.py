@@ -127,7 +127,7 @@ def read_config(case_dir:str):
 
 def read_helpfile(case_dir:str, atm=True):
     f = case_dir+"/runtime_helpfile.csv"
-    df_raw = pd.read_csv(f,sep='\s+')
+    df_raw = pd.read_csv(f,sep=r'\s+')
     if atm:
         df = df_raw.loc[df_raw['Input']=='Atmosphere'].drop_duplicates(subset=['Time'], keep='last')
     else:
