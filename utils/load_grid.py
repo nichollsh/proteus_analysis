@@ -239,7 +239,7 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
 
     # check dimensions
     if (len(x_locs) < 3) or (len(y_locs) < 3):
-        raise Exception("Cannot interolate grid with a resolution less than 3")
+        raise Exception("Cannot interpolate grid with a resolution less than 3")
     
     # reshape into 2d
     z_2d = np.reshape(z_vals, (len(x_locs),len(y_locs))).T
