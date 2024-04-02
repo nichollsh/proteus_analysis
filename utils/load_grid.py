@@ -2,7 +2,7 @@ import numpy as np
 import glob, os, re
 import netCDF4 as nc 
 import pandas as pd
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
 
 # List of volatiles
@@ -216,6 +216,13 @@ def load_netcdfs_end(cases):
     return endn
 
 
+ # check scaling
+def _is_log(_arr):
+    _arr = np.array(_arr)
+    if np.any(_arr <= 0):
+        return False
+    return np.log10(np.amax(_arr)/np.amin(_arr)) > 2.0  # range is more than 2 order of magnitude
+
 # Interpolate a variable onto a higher resolution grid (2 dimensions only)
 def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
 
@@ -230,66 +237,56 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
         scaling : Use log-scaling if variable range is >2 OOM
 
     Outputs
-        xxo     : Original x-locations (2D grid)
-        yyo     : Original y-locations (2D grid)
-        xxi     : Interpolated x-locations (2D grid)
-        yyi     : Interpolated y-locations (2D grid)
-        zzi     : Interpolated z_vals (2D grid)
+        xo     : Original x-locations (1D grid)
+        yo     : Original y-locations (1D grid)
+        xi     : Interpolated x-locations (2D grid)
+        yi     : Interpolated y-locations (2D grid)
+        zi     : Interpolated z_vals (2D grid)
     '''
 
     # check dimensions
     if (len(x_locs) < 3) or (len(y_locs) < 3):
         raise Exception("Cannot interpolate grid with a resolution less than 3")
     
-    # reshape into 2d
-    z_2d = np.reshape(z_vals, (len(x_locs),len(y_locs))).T
+    zlog = _is_log(z_vals) and scaling
+    if zlog:
+        z_vals = np.log10(z_vals)
     
-    # check scaling
-    def _is_log(_arr):
-        if not scaling:
-            return False
-        _arr = np.array(_arr)
-        if np.any(_arr <= 0):
-            return False
-        return np.log10(np.amax(_arr)/np.amin(_arr)) > 2.0  # range is more than 2 order of magnitude
-    
-    xlog = _is_log(x_locs)
+    xlog = _is_log(x_locs) and scaling
     if xlog:
         x_locs = np.log10(x_locs)
     xmin = np.amin(x_locs)
     xmax = np.amax(x_locs)
 
-    ylog = _is_log(y_locs)
+    ylog = _is_log(y_locs) and scaling
     if ylog:
         y_locs = np.log10(y_locs)
     ymin = np.amin(y_locs)
     ymax = np.amax(y_locs)
 
-    zlog = _is_log(z_2d)
-    if zlog:
-        z_2d = np.log10(z_2d)
-
-    # input samples
-    xxo, yyo = np.meshgrid(x_locs, y_locs, indexing='ij')
-
-    # generate interpolator
-    interp = RegularGridInterpolator((x_locs, y_locs), z_2d, bounds_error=False, fill_value=None, method=method)
-
     # grid to interpolate at
     xi = np.linspace(xmin, xmax, npoints)
     yi = np.linspace(ymin, ymax, npoints)
 
+    xxi = []
+    yyi = []
+    for x in xi:
+        for y in yi:
+            xxi.append(x)
+            yyi.append(y)
+
     # do interpolation
-    xxi, yyi = np.meshgrid(xi,yi,indexing='ij')
-    zzi = interp((xxi,yyi))
+    zzi = griddata((x_locs, y_locs), z_vals, (xxi,yyi), method=method)
+
+    zzi = np.reshape(zzi, (npoints, npoints)).T
 
     if xlog:
-        xxi = 10.0 ** xxi
-        xxo = 10.0 ** xxo
+        xi     = 10.0 ** xi
+        x_locs = 10.0 ** x_locs
     if ylog:
-        yyi = 10.0 ** yyi
-        yyo = 10.0 ** yyo
+        yi     = 10.0 ** yi
+        y_locs = 10.0 ** y_locs
     if zlog:
         zzi = 10.0 ** zzi
-    return xxo,yyo,xxi,yyi,zzi
+    return x_locs,y_locs,xi,yi,zzi
 
