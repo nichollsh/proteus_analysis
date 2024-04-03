@@ -17,7 +17,16 @@ volatile_colors  = {"H2O": "#C720DD",
                     "O2" : "#00008B",
                     "He" : "#30FF71"
                     }
-
+volatile_pretty  = {"H2O": "H$_2$O",
+                    "CO2": "CO$_2$",
+                    "H2" : "H$_2$" ,
+                    "CH4": "CH$_4$",
+                    "CO" : "CO" ,
+                    "N2" : "N$_2$" ,
+                    "S"  : "S"  ,
+                    "O2" : "O$_2$" ,
+                    "He" : "He"
+                    }
 # Get paths to case outputs for a given grid parent folder
 def get_cases(pgrid_dir:str):
     # Case folders
