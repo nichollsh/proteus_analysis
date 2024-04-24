@@ -44,7 +44,7 @@ def get_cases(pgrid_dir:str):
 
 # Get simulation output years for which we have json data
 def get_json_years(case_dir:str):
-    output_files = glob.glob(os.path.join(case_dir,"data")+"*.json")
+    output_files = glob.glob(os.path.join(case_dir,"data")+"/*.json")
     output_times = [ int(str(f).split('/')[-1].split('.')[0]) for f in set(output_files)]
     mask = np.argsort(output_times)
     return np.array(output_times)[mask]
