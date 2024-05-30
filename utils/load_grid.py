@@ -6,7 +6,7 @@ from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
 
 # List of volatiles
-volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2", "O2", "S", "He"]
+volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2"]
 volatile_colors  = {"H2O": "#C720DD",
                     "CO2": "#D24901",
                     "H2" : "#008C01",
