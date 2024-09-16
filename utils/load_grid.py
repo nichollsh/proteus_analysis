@@ -7,10 +7,10 @@ from tqdm import tqdm
 
 # List of volatiles
 volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2"]
-volatile_colors  = {"H2O": "#C720DD",
+volatile_colors  = {"H2O": "#027FB1",
                     "CO2": "#D24901",
                     "H2" : "#008C01",
-                    "CH4": "#027FB1",
+                    "CH4": "#C720DD",
                     "CO" : "#D1AC02",
                     "N2" : "#870036",
                     "S"  : "#FF8FA1",
