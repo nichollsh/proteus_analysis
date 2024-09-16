@@ -1,6 +1,6 @@
 import numpy as np
 import glob, os, re
-import netCDF4 as nc 
+import netCDF4 as nc
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
@@ -34,7 +34,7 @@ def get_cases(pgrid_dir:str):
     case_dirs = glob.glob(p + "/case_*")
     if len(case_dirs) == 0:
         print("WARNING: Case folders not found - check your pgrid path!")
-    
+
     # Sort by case index
     idxs = []
     for c in case_dirs:
@@ -100,9 +100,9 @@ def read_nc(nc_file:str):
     # All array-like variables
     for k in vars:
         if k in data.keys():
-            continue 
+            continue
         data[k] = np.array(ds.variables[k][:], dtype=float)
-    
+
     ds.close()
     return data
 
@@ -116,7 +116,7 @@ def is_float(v):
 
 # Get case configuration file (value as strings)
 def read_config(case_dir:str):
-    f = case_dir+"/init_coupler.cfg"
+    f = case_dir+"/init_coupler.toml"
     cfg = {}
     with open(f,'r') as hdl:
         lines = hdl.readlines()
@@ -134,14 +134,9 @@ def read_config(case_dir:str):
         cfg[k] = v
     return cfg
 
-def read_helpfile(case_dir:str, atm=True):
+def read_helpfile(case_dir:str):
     f = case_dir+"/runtime_helpfile.csv"
-    df_raw = pd.read_csv(f,sep=r'\s+')
-    if atm:
-        df = df_raw.loc[df_raw['Input']=='Atmosphere'].drop_duplicates(subset=['Time'], keep='last')
-    else:
-        df = df_raw.loc[df_raw['Input']=='Interior'].drop_duplicates(subset=['Time'], keep='last')
-    return df
+    return pd.read_csv(f,sep=r'\s+')
 
 # Function to access nested dictionaries
 def recursive_get(d, keys):
@@ -178,8 +173,8 @@ def load_cvars(cases):
             values.append(cfgs[i][k])
         if len(values) > 0:
             cvars[k] = np.array(values,dtype=type(values[0]))
-    return cvars 
-    
+    return cvars
+
 def load_helpfiles(cases):
     helps = []
     hvars = {}
@@ -256,11 +251,11 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     # check dimensions
     if (len(x_locs) < 3) or (len(y_locs) < 3):
         raise Exception("Cannot interpolate grid with a resolution less than 3")
-    
+
     zlog = _is_log(z_vals) and scaling
     if zlog:
         z_vals = np.log10(z_vals)
-    
+
     xlog = _is_log(x_locs) and scaling
     if xlog:
         x_locs = np.log10(x_locs)

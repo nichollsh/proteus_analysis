@@ -3,3 +3,9 @@ output/
 __pycache__
 .vscode
 nogit*
+*.pyc
+*.nc
+*.dat 
+*.csv 
+*.tsv
+
