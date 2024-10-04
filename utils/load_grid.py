@@ -34,6 +34,8 @@ def get_cases(pgrid_dir:str):
     case_dirs = glob.glob(p + "/case_*")
     if len(case_dirs) == 0:
         print("WARNING: Case folders not found - check your pgrid path!")
+        print(pgrid_dir)
+        raise 
 
     # Sort by case index
     idxs = []
