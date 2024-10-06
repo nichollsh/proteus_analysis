@@ -6,16 +6,15 @@ from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
 
 # List of volatiles
-volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2"]
+volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2", "SO2", "S2"]
 volatile_colors  = {"H2O": "#027FB1",
                     "CO2": "#D24901",
                     "H2" : "#008C01",
                     "CH4": "#C720DD",
                     "CO" : "#D1AC02",
                     "N2" : "#870036",
-                    "S"  : "#FF8FA1",
-                    "O2" : "#00008B",
-                    "He" : "#30FF71"
+                    "S2" : "#FF8FA1",
+                    "SO2": "#00008B",
                     }
 volatile_pretty  = {"H2O": "H$_2$O",
                     "CO2": "CO$_2$",
@@ -23,10 +22,22 @@ volatile_pretty  = {"H2O": "H$_2$O",
                     "CH4": "CH$_4$",
                     "CO" : "CO" ,
                     "N2" : "N$_2$" ,
-                    "S"  : "S"  ,
-                    "O2" : "O$_2$" ,
+                    "S2"  : "S$_2$"  ,
+                    "SO2": "SO$_2$" ,
                     "He" : "He"
                     }
+
+
+def latexify(s:str):
+    out = ""
+    for c in s:
+        if str(c).isdigit():
+            out += "$_%d$"%int(c)
+        else:
+            out += c
+
+    return out 
+
 # Get paths to case outputs for a given grid parent folder
 def get_cases(pgrid_dir:str):
     # Case folders
