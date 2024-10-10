@@ -128,8 +128,8 @@ def is_float(v):
     return True
 
 # Get case configuration file (value as strings)
-def read_config(case_dir:str):
-    f = case_dir+"/init_coupler.toml"
+def read_config(case_dir:str, extension="toml"):
+    f = case_dir+"/init_coupler."+extension
     cfg = {}
     with open(f,'r') as hdl:
         lines = hdl.readlines()
@@ -170,12 +170,12 @@ def get_dict_values( self, keys, fmt_o='' ):
         scaled_values_a = fmt_o.ascale( scaled_values_a )
     return scaled_values_a
 
-def load_cvars(cases):
+def load_cvars(cases, extension="toml"):
     ncases = len(cases)
     pbar = tqdm(desc="Configs", total=ncases)
     cfgs = []
     for i in range(ncases):
-        cfgs.append(read_config(cases[i]))
+        cfgs.append(read_config(cases[i], extension=extension))
         pbar.update(1)
     pbar.close()
     keys = cfgs[0].keys()
