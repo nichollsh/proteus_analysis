@@ -2,31 +2,10 @@ import numpy as np
 import glob, os, re
 import netCDF4 as nc
 import pandas as pd
+from attrs import asdict
 from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
-
-# List of volatiles
-volatile_species = ["H2O", "CO2", "H2", "CO", "CH4", "N2", "SO2", "S2"]
-volatile_colors  = {"H2O": "#027FB1",
-                    "CO2": "#D24901",
-                    "H2" : "#008C01",
-                    "CH4": "#C720DD",
-                    "CO" : "#D1AC02",
-                    "N2" : "#870036",
-                    "S2" : "#FF8FA1",
-                    "SO2": "#00008B",
-                    }
-volatile_pretty  = {"H2O": "H$_2$O",
-                    "CO2": "CO$_2$",
-                    "H2" : "H$_2$" ,
-                    "CH4": "CH$_4$",
-                    "CO" : "CO" ,
-                    "N2" : "N$_2$" ,
-                    "S2"  : "S$_2$"  ,
-                    "SO2": "SO$_2$" ,
-                    "He" : "He"
-                    }
-
+from proteus.config import read_config_object, Config
 
 def latexify(s:str):
     out = ""
@@ -36,7 +15,7 @@ def latexify(s:str):
         else:
             out += c
 
-    return out 
+    return out
 
 # Get paths to case outputs for a given grid parent folder
 def get_cases(pgrid_dir:str):
@@ -46,7 +25,7 @@ def get_cases(pgrid_dir:str):
     if len(case_dirs) == 0:
         print("WARNING: Case folders not found - check your pgrid path!")
         print(pgrid_dir)
-        raise 
+        raise
 
     # Sort by case index
     idxs = []
@@ -129,37 +108,44 @@ def is_float(v):
 
 # Get case configuration file (value as strings)
 def read_config(case_dir:str, extension="toml"):
-    f = case_dir+"/init_coupler."+extension
-    cfg = {}
-    with open(f,'r') as hdl:
-        lines = hdl.readlines()
-    for l in lines:
-        ll = l[:-1] # remove new line char
-        ll =  re.sub(r"\s+", "", ll) # remove whitespace
-        if (len(ll) == 0) or (ll[0] == "#"):
-            continue
-        if "#" in ll:
-            ll = ll.split("#")[0]  # remove comment
-        ll = ll.split("=")
-        k = str(ll[0]); v = str(ll[1])
-        if is_float(v):
-            v = float(v)
-        cfg[k] = v
-    return cfg
+    return asdict(read_config_object(case_dir+"/init_coupler.toml"))
+
+def descend_set(config:Config, key:str, val):
+    bits = tuple(key.split("."))
+    depth = len(bits)-1
+    if depth == 0:
+        config[bits[0]] = val
+    elif depth == 1:
+        config[bits[0]][bits[1]] = val
+    elif depth == 2:
+        config[bits[0]][bits[1]][bits[3]] = val
+    else:
+        raise Exception("Requested key is too deep for configuration tree")
+
+def descend_get(config:Config, key:str):
+    bits = tuple(key.split("."))
+    depth = len(bits)-1
+    if depth == 0:
+        return config[bits[0]]
+    elif depth == 1:
+        return config[bits[0]][bits[1]]
+    elif depth == 2:
+        return config[bits[0]][bits[1]][bits[2]]
+    else:
+        raise Exception("Requested key is too deep for configuration tree")
 
 def read_helpfile(case_dir:str):
-    f = case_dir+"/runtime_helpfile.csv"
-    return pd.read_csv(f,sep=r'\s+')
+    return pd.read_csv(case_dir+"/runtime_helpfile.csv",sep=r'\s+')
 
 # Function to access nested dictionaries
-def recursive_get(d, keys):
+def _recursive_get(d, keys):
     if len(keys) == 1:
         return d[keys[0]]
-    return recursive_get(d[keys[0]], keys[1:])
+    return _recursive_get(d[keys[0]], keys[1:])
 
 # Get the scaled values for a particular quantity
 def get_dict_values( self, keys, fmt_o='' ):
-    dict_d = recursive_get( self.data_d, keys )
+    dict_d = _recursive_get( self.data_d, keys )
     scaling = float(dict_d['scaling'])
     if len( dict_d['values'] ) == 1:
         values_a = float( dict_d['values'][0] )
@@ -170,23 +156,22 @@ def get_dict_values( self, keys, fmt_o='' ):
         scaled_values_a = fmt_o.ascale( scaled_values_a )
     return scaled_values_a
 
-def load_cvars(cases, extension="toml"):
+def load_configs(cases):
     ncases = len(cases)
     pbar = tqdm(desc="Configs", total=ncases)
     cfgs = []
     for i in range(ncases):
-        cfgs.append(read_config(cases[i], extension=extension))
+        cfgs.append(read_config(cases[i]))
         pbar.update(1)
     pbar.close()
-    keys = cfgs[0].keys()
-    cvars = {}
-    for k in keys:
-        values = []
-        for i in range(ncases):
-            values.append(cfgs[i][k])
-        if len(values) > 0:
-            cvars[k] = np.array(values,dtype=type(values[0]))
-    return cvars
+    return cfgs
+
+def access_configs(cfgs,keys):
+    values = []
+    for i in range(len(cfgs)):
+        val = descend_get(cfgs[i],keys)
+        values.append(val)
+    return values
 
 def load_helpfiles(cases):
     helps = []
