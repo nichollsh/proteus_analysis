@@ -65,35 +65,35 @@ def get_statuses(pgrid_dir:str):
             statuses.append(int(hdl.readlines()[0]))
     return statuses
 
-def read_nc(nc_file:str):
+def readncdf(f):
 
-    ds = nc.Dataset(nc_file)
+    ds = nc.Dataset(f)
     vars = list(ds.variables.keys())
 
-    nlev_c = len(ds.variables["p"][:])
+    nlev_c = len(ds.variables ["p"][:])
     nlev_l = len(ds.variables["pl"][:])
-    tsurf  = float(ds.variables["tstar"][:])
+    tsurf  = float(ds.variables["tmp_surf"][:])
     psurf  = float(ds.variables["pl"][-1])
     gases  = [str(bytearray(s).decode()).strip() for s in ds.variables["gases"][:]]
-    x_raw  = np.array(ds.variables["x_gas"][:]).T
-    x_gas  = {}
-    for i,g in enumerate(gases):
-        x_gas[g] = x_raw[i]
+    asf    = float(ds.variables["toa_heating"][:])
 
     data = {
         "nlev_c":       nlev_c,
         "nlev_l":       nlev_l,
-        "tstar":        tsurf,
+        "tmp_surf":     tsurf,
         "psurf":        psurf,
         "gases":        gases,
-        "x_gas":        x_gas,
+        "toa_heating":  asf,
     }
 
-    # All array-like variables
     for k in vars:
         if k in data.keys():
             continue
-        data[k] = np.array(ds.variables[k][:], dtype=float)
+        var = ds.variables[k][:]
+        try:
+            data[k] = np.array(ds.variables[k][:], dtype=float)
+        except:
+            continue
 
     ds.close()
     return data
@@ -291,4 +291,21 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
     if zlog:
         zzi = 10.0 ** zzi
     return x_locs,y_locs,xi,yi,zzi
+
+def make_legend(ax, loc='best', lw=1.0):
+
+    leg = ax.legend(loc=loc)
+
+    # Remove duplicate legend entries
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    leg = ax.legend(by_label.values(), by_label.keys(), loc=loc)
+
+    for hdl in leg.legend_handles:
+        hdl.set_color('k')
+
+    for line in leg.get_lines():
+        line.set_linewidth(lw)
+
+    return leg
 
