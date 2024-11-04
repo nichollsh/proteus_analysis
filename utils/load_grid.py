@@ -292,9 +292,9 @@ def interp_2d(x_locs, y_locs, z_vals, npoints, method="linear", scaling=True):
         zzi = 10.0 ** zzi
     return x_locs,y_locs,xi,yi,zzi
 
-def add_cbar(fig, sm, ticks=[], tick_format="%+d", label="_label", width=0.03):
+def add_cbar(fig, sm, ticks=[], tick_format="%+d", label="_label", width=0.03, squeeze=0.9):
     fig.subplots_adjust(right=0.89)
-    cbar_ax = fig.add_axes([0.9, 0.15, width, 0.7])
+    cbar_ax = fig.add_axes([squeeze, 0.15, width, 0.7])
     cbar = fig.colorbar(sm, cax=cbar_ax, values=ticks)
     cbar.set_label(label)
 
