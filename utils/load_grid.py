@@ -65,7 +65,9 @@ def get_statuses(pgrid_dir:str):
             statuses.append(int(hdl.readlines()[0]))
     return statuses
 
-def readncdf(f):
+def readncdf(f, verbose=False):
+
+    if verbose: print("Reading",f)
 
     ds = nc.Dataset(f)
     vars = list(ds.variables.keys())
@@ -85,6 +87,8 @@ def readncdf(f):
         "gases":        gases,
         "toa_heating":  asf,
     }
+
+    if verbose: print(gases)
 
     for k in vars:
         if k in data.keys():
