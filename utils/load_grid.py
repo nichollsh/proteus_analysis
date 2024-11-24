@@ -305,14 +305,14 @@ def add_cbar(fig, sm, ticks=[], tick_format="%+d", label="_label", width=0.03, s
     if len(ticks) > 1:
         cbar.set_ticks(ticks=ticks, labels=[tick_format%t for t in ticks])
 
-def make_legend(ax, loc='best', lw=1.0):
+def make_legend(ax, loc='best', lw=1.0, alpha=0.7):
 
     leg = ax.legend(loc=loc)
 
     # Remove duplicate legend entries
     handles, labels = ax.get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    leg = ax.legend(by_label.values(), by_label.keys(), loc=loc)
+    leg = ax.legend(by_label.values(), by_label.keys(), loc=loc, framealpha=alpha)
 
     for hdl in leg.legend_handles:
         hdl.set_color('k')
