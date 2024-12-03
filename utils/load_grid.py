@@ -58,11 +58,15 @@ def get_common_years(json_years:list, nc_years:list):
 def get_statuses(pgrid_dir:str):
     p = os.path.abspath(pgrid_dir)
     case_dirs = glob.glob(p + "/case_*")
-    statuses = []
-    for c in case_dirs:
+    case_nums = [int(s.split("_")[-1]) for s in case_dirs]
+
+    statuses = {}
+    for i,c in enumerate(case_dirs):
+        this_case = case_nums[i]
         status_file = os.path.join(os.path.abspath(c),"status")
         with open(status_file,'r') as hdl:
-            statuses.append(int(hdl.readlines()[0]))
+            statuses[this_case] = int(hdl.readlines()[0])
+
     return statuses
 
 def readncdf(f, verbose=False):
@@ -139,7 +143,12 @@ def descend_get(config:Config, key:str):
         raise Exception("Requested key is too deep for configuration tree")
 
 def read_helpfile(case_dir:str):
-    return pd.read_csv(case_dir+"/runtime_helpfile.csv",sep=r'\s+')
+    try:
+        df = pd.read_csv(case_dir+"/runtime_helpfile.csv",sep=r'\s+')
+    except EmptyDataError as e:
+        print("Empty helpfile: "+case_dir)
+        df = []
+    return df
 
 # Function to access nested dictionaries
 def _recursive_get(d, keys):
@@ -305,17 +314,22 @@ def add_cbar(fig, sm, ticks=[], tick_format="%+d", label="_label", width=0.03, s
     if len(ticks) > 1:
         cbar.set_ticks(ticks=ticks, labels=[tick_format%t for t in ticks])
 
-def make_legend(ax, loc='best', lw=1.0, alpha=0.7):
+def make_legend(ax, loc='best', lw=1.0, alpha=1.0, set_color='k', title=None):
 
     leg = ax.legend(loc=loc)
 
     # Remove duplicate legend entries
     handles, labels = ax.get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    leg = ax.legend(by_label.values(), by_label.keys(), loc=loc, framealpha=alpha)
+    leg = ax.legend(by_label.values(), by_label.keys(),
+                        loc=loc, framealpha=alpha, title=title)
 
     for hdl in leg.legend_handles:
-        hdl.set_color('k')
+            col = hdl.set_alpha(1.0)
+
+    if set_color is not None:
+        for hdl in leg.legend_handles:
+            hdl.set_color(set_color)
 
     for line in leg.get_lines():
         line.set_linewidth(lw)
