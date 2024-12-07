@@ -5,17 +5,21 @@ def read_postproc(f):
     data = {}
     ds = nc.Dataset(f+"/ppr.nc")
 
-    vars = ["ba_D_LW", "ba_U_LW", "ba_N_LW", "ba_D_SW", "ba_U_SW", "ba_N_SW"]
+    # 2D
+    vars = ["ba_D_LW", "ba_U_LW", "ba_N_LW", "ba_D_SW", "ba_U_SW", "ba_N_SW", "contfunc"]
     for k in vars:
         data[k] = np.array(ds.variables[k][:,:], dtype=float)
 
+    # 1D
     vars = ["time", "bandmin", "bandmax"]
     for k in vars:
         data[k] = np.array(ds.variables[k][:], dtype=float)
 
+    # dimensions
     data["nsamps"] = len(ds.dimensions["nsamps"])
     data["nbands"] = len(ds.dimensions["nbands"])
 
+    # metadata
     data["original_model"] = str(ds.original_model)
 
     ds.close()
