@@ -139,6 +139,10 @@ def descend_get(config:Config, key:str):
         return config[bits[0]][bits[1]]
     elif depth == 2:
         return config[bits[0]][bits[1]][bits[2]]
+    elif depth == 3:
+        return config[bits[0]][bits[1]][bits[2]][bits[3]]
+    elif depth == 4:
+        return config[bits[0]][bits[1]][bits[2]][bits[3]][bits[4]]
     else:
         raise Exception("Requested key is too deep for configuration tree")
 
