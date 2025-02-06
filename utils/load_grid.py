@@ -2,6 +2,7 @@ import numpy as np
 import glob, os, re
 import netCDF4 as nc
 import pandas as pd
+import json
 from attrs import asdict
 from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
@@ -68,6 +69,17 @@ def get_statuses(pgrid_dir:str):
             statuses[this_case] = int(hdl.readlines()[0])
 
     return statuses
+
+def readjson(fpath):
+    with open(fpath) as hdl:
+        data = json.load(hdl)
+
+    out = {}
+    for k in data["data"].keys():
+        arr = [float(v) for v in data["data"][k]["values"]]
+        out[k] = np.array(arr, dtype=float) * float(data["data"][k]["scaling"])
+    out["time"] = float(data["time_years"])
+    return out
 
 def readncdf(f, verbose=False):
 
