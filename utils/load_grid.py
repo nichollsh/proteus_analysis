@@ -219,6 +219,35 @@ def load_helpfiles(cases):
         hvars[k] = np.array(tmp_arr,dtype=object)
     return helps, hvars
 
+def load_synthobs(cases):
+    transit = []
+    eclipse = []
+    ncases = len(cases)
+    pbar = tqdm(desc="Synthobs", total=ncases)
+    for i in range(ncases):
+
+        # defaults
+        output_dir = os.path.abspath(cases[i])
+        df_transit = {"Wavelength/um":[],"None/ppm":[]}
+        df_eclipse = {"Wavelength/um":[],"None/ppm":[]}
+
+        # read transmission
+        ftransit = os.path.join(output_dir, "data", "obs_synth_transit.csv")
+        if os.path.isfile(ftransit):
+            df_transit = pd.read_csv(ftransit)
+
+        # read eclipse
+        feclipse = os.path.join(output_dir, "data", "obs_synth_eclipse.csv")
+        if os.path.isfile(feclipse):
+            df_eclipse = pd.read_csv(feclipse)
+
+        transit.append(df_transit)
+        eclipse.append(df_eclipse)
+        pbar.update(1)
+    pbar.close()
+
+    return transit, eclipse
+
 # Get value of 'key' at 'idx' for each case in 'hvars', which is a ragged array
 def access_hvars(hvars,key,idx):
     rag = hvars[key]
