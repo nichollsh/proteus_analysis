@@ -19,7 +19,7 @@ def latexify(s:str):
     return out
 
 # Get paths to case outputs for a given grid parent folder
-def get_cases(pgrid_dir:str):
+def get_cases(pgrid_dir:str, cnum_min:int=0, cnum_max:int=99999999, only_completed:bool=False):
     # Case folders
     p = os.path.abspath(pgrid_dir)
     case_dirs = glob.glob(p + "/case_*")
@@ -33,7 +33,20 @@ def get_cases(pgrid_dir:str):
     for c in case_dirs:
         idxs.append(int(c.split("/")[-1].split("_")[-1]))
     mask = np.argsort(idxs)
-    return [os.path.abspath(case_dirs[i]) for i in mask]
+
+    dirs = []
+
+    # Remove cases which are out of range or haven't completed
+    dirs = []
+    for i in mask:
+        dir = os.path.abspath(case_dirs[i])
+        idx = int(dir.split("/")[-1].split("_")[-1])
+        com = (10 <= get_status(dir) <= 19) or not only_completed
+        if (cnum_min <= idx <= cnum_max) and com:
+            dirs.append(dir)
+
+    # return list
+    return dirs
 
 # Get simulation output years for which we have json data
 def get_json_years(case_dir:str):
@@ -55,6 +68,15 @@ def get_common_years(json_years:list, nc_years:list):
     mask = np.argsort(list(both))
     return np.array(both)[mask]
 
+# Get status of a single case
+def get_status(case_dir:str):
+    status_file = os.path.join(os.path.abspath(case_dir),"status")
+    stat = -1
+    if os.path.exists(status_file):
+        with open(status_file,'r') as hdl:
+            stat = int(hdl.readlines()[0])
+    return stat
+
 # Get status of cases
 def get_statuses(pgrid_dir:str):
     p = os.path.abspath(pgrid_dir)
@@ -64,9 +86,7 @@ def get_statuses(pgrid_dir:str):
     statuses = {}
     for i,c in enumerate(case_dirs):
         this_case = case_nums[i]
-        status_file = os.path.join(os.path.abspath(c),"status")
-        with open(status_file,'r') as hdl:
-            statuses[this_case] = int(hdl.readlines()[0])
+        statuses[this_case] = get_status(case_dirs[this_case])
 
     return statuses
 
