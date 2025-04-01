@@ -181,8 +181,8 @@ def descend_get(config:Config, key:str):
 def read_helpfile(case_dir:str):
     try:
         df = pd.read_csv(case_dir+"/runtime_helpfile.csv",sep=r'\s+')
-    except pd.errors.EmptyDataError as e:
-        print("Empty helpfile: "+case_dir)
+    except:
+        print(f"Could not read helpfile from '{case_dir}'")
         df = []
     return df
 
