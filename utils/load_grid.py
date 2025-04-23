@@ -81,12 +81,11 @@ def get_status(case_dir:str):
 def get_statuses(pgrid_dir:str):
     p = os.path.abspath(pgrid_dir)
     case_dirs = glob.glob(p + "/case_*")
-    case_nums = [int(s.split("_")[-1]) for s in case_dirs]
 
     statuses = {}
     for i,c in enumerate(case_dirs):
-        this_case = case_nums[i]
-        statuses[this_case] = get_status(case_dirs[this_case])
+        this_case = int(c.split("_")[-1].replace("/",""))
+        statuses[this_case] = get_status(c)
 
     return statuses
 
