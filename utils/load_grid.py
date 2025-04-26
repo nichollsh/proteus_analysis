@@ -227,14 +227,22 @@ def load_helpfiles(cases):
     ncases = len(cases)
     pbar = tqdm(desc="Helpfiles", total=ncases)
     for i in range(ncases):
-        helps.append(read_helpfile(cases[i]))
+        h = read_helpfile(cases[i])
+        if (h is not None) and (len(h) > 0):
+            keys = list(h.keys())
+        else:
+            print(f"WARNING: Could not read helpfile for {cases[i]}")
+        helps.append(h)
         pbar.update(1)
     pbar.close()
 
-    for k in helps[0].keys():
+    for k in keys:
         tmp_arr = []
         for h in helps:
-            tmp_arr.append(np.array(h.loc[:,k]))
+            if (h is not None) and (len(h) > 0):
+                tmp_arr.append(np.array(h.loc[:,k]))
+            else:
+                tmp_arr.append(np.array([]))
         hvars[k] = np.array(tmp_arr,dtype=object)
     return helps, hvars
 
