@@ -242,7 +242,7 @@ def load_helpfiles(cases):
             if (h is not None) and (len(h) > 0):
                 tmp_arr.append(np.array(h.loc[:,k]))
             else:
-                tmp_arr.append(np.array([]))
+                tmp_arr.append(np.array([None]))
         hvars[k] = np.array(tmp_arr,dtype=object)
     return helps, hvars
 
