@@ -7,6 +7,7 @@ from attrs import asdict
 from scipy.interpolate import RegularGridInterpolator, griddata
 from tqdm import tqdm
 from proteus.config import read_config_object, Config
+from proteus.utils.constants import *
 
 def latexify(s:str):
     out = ""
