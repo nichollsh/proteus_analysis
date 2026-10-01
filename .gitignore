@@ -1,4 +1,5 @@
 data/
+data_extract
 output/
 __pycache__
 .vscode
