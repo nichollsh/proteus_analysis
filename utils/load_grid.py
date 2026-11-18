@@ -1,3 +1,5 @@
+import contextlib
+
 import numpy as np
 import glob, os, re
 import netCDF4 as nc
@@ -148,7 +150,10 @@ def is_float(v):
 
 # Get case configuration file (value as strings)
 def read_config(case_dir:str, extension="toml"):
-    return asdict(read_config_object(case_dir+"/init_coupler.toml"))
+    # disable printing in this function, since it is called many times in a loop
+    with open(os.devnull, 'w') as f, contextlib.redirect_stdout(f):
+        d = asdict(read_config_object(case_dir+"/init_coupler.toml"))
+    return d
 
 def descend_set(config:Config, key:str, val):
     bits = tuple(key.split("."))
